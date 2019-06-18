@@ -18,6 +18,13 @@ def get_texts(root):
                     yield text
 
 
+def get_num_tokens(text_iter):
+    res = 0
+    for text in text_iter:
+        res += len(text.split())
+    return res
+
+
 def write_file(file_path, text_iter, num_tokens):
     total_num_tokens = 0
     print(f'Writing to {file_path}...')
@@ -48,9 +55,16 @@ def main(args):
 
     train_path = output.joinpath('train.csv')
     val_path = output.joinpath('val.csv')
+    
+    # how much into train, and how much into val?
+    if args.num_tokens == -1:
+        args.num_tokens = get_num_tokens(get_texts(input_path))
+    num_train = int(0.9 * args.num_tokens)
+    num_val = args.num_tokens - num_train
+    
     text_iter = get_texts(input_path)
-    write_file(train_path, text_iter, args.num_tokens)
-    write_file(val_path, text_iter, args.num_tokens / 10)
+    write_file(train_path, text_iter, num_train)
+    write_file(val_path, text_iter, num_val)
 
 
 if __name__ == '__main__':
@@ -63,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', required=True,
                         help='the output directory where the merged Wikipedia '
                              'documents should be saved')
-    parser.add_argument('-n', '--num-tokens', type=int, default=100000000,
+    parser.add_argument('-n', '--num-tokens', type=int, default=-1,
                         help='the # of tokens that the merged document should '
                              'contain (default: 100M)')
     args = parser.parse_args()

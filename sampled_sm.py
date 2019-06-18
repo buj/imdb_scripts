@@ -50,7 +50,7 @@ def get_language_model(n_tok, em_sz, nhid, nlayers, pad_token, decode_train=True
 
 
 def pt_sample(pr, ns):
-    w = -torch.log(cuda.FloatTensor(len(pr)).uniform_())/(pr+1e-10)
+    w = -torch.log(FloatTensor(len(pr)).uniform_())/(pr+1e-10)
     return torch.topk(w, ns, largest=False)[1]
 
 
@@ -58,7 +58,7 @@ class CrossEntDecoder(nn.Module):
     initrange=0.1
     def __init__(self, prs, decoder, n_neg=4000, sampled=True):
         super().__init__()
-        self.prs,self.decoder,self.sampled = T(prs).cuda(),decoder,sampled
+        self.prs,self.decoder,self.sampled = T(prs),decoder,sampled
         self.set_n_neg(n_neg)
 
     def set_n_neg(self, n_neg): self.n_neg = n_neg
@@ -84,7 +84,7 @@ class CrossEntDecoder(nn.Module):
 
 def get_learner(drops, n_neg, sampled, md, em_sz, nh, nl, opt_fn, prs):
     m = to_gpu(get_language_model(md.n_tok, em_sz, nh, nl, md.pad_idx, decode_train=False, dropouts=drops))
-    crit = CrossEntDecoder(prs, m[1].decoder, n_neg=n_neg, sampled=sampled).cuda()
+    crit = CrossEntDecoder(prs, m[1].decoder, n_neg=n_neg, sampled=sampled)
     learner = RNN_Learner(md, LanguageModel(m), opt_fn=opt_fn)
     crit.dw = learner.model[0].encoder.weight
     learner.crit = crit

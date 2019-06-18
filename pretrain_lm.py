@@ -22,11 +22,11 @@ def train_lm(dir_path, cuda_id, cl=1, bs=64, backwards=False, lr=3e-4, sampled=T
     opt_fn = partial(optim.Adam, betas=(0.8, 0.99))
 
     if backwards:
-        trn_lm = np.load(p / f'tmp/trn_{IDS}_bwd.npy')
-        val_lm = np.load(p / f'tmp/val_{IDS}_bwd.npy')
+        trn_lm = np.load(p / f'tmp/trn_{IDS}_bwd.npy', allow_pickle=True)
+        val_lm = np.load(p / f'tmp/val_{IDS}_bwd.npy', allow_pickle=True)
     else:
-        trn_lm = np.load(p / f'tmp/trn_{IDS}.npy')
-        val_lm = np.load(p / f'tmp/val_{IDS}.npy')
+        trn_lm = np.load(p / f'tmp/trn_{IDS}.npy', allow_pickle=True)
+        val_lm = np.load(p / f'tmp/val_{IDS}.npy', allow_pickle=True)
     trn_lm = np.concatenate(trn_lm)
     val_lm = np.concatenate(val_lm)
 
