@@ -33,7 +33,7 @@ def get_texts(df, n_lbls, lang='en'):
 def get_all(df, n_lbls, lang='en', num_chunks=1):
     tok, labels = [], []
     for i, r in enumerate(df):
-        if i >= num_chunks:
+        if num_chunks >= 0 and i >= num_chunks:
             break
         print(i)
         tok_, labels_ = get_texts(r, n_lbls, lang=lang)
@@ -42,8 +42,8 @@ def get_all(df, n_lbls, lang='en', num_chunks=1):
     return tok, labels
 
 
-def create_toks(dir_path, chunksize=24000, n_lbls=1, lang='en', max_total=50000):
-    num_chunks = max_total // chunksize
+def create_toks(dir_path, chunksize=24000, n_lbls=1, lang='en', max_total=None):
+    num_chunks = ((max_total // chunksize) if max_total is not None else -1)
     print(f'dir_path {dir_path} chunksize {chunksize} n_lbls {n_lbls} lang {lang} max_total {max_total}')
     try:
         spacy.load(lang)
