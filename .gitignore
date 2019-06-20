@@ -1,2 +1,6 @@
 *.whl
 fastai
+.python-version
+__pycache__
+data
+wikiextractor

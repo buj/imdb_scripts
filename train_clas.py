@@ -2,6 +2,8 @@ import fire
 from fastai.text import *
 from fastai.lm_rnn import *
 
+from torch_util import *
+
 
 def freeze_all_but(learner, n):
     c=learner.get_layer_groups()
@@ -17,11 +19,8 @@ def train_clas(dir_path, cuda_id, lm_id='', clas_id=None, bs=64, cl=1, backwards
         f'dropmult {dropmult} unfreeze {unfreeze} startat {startat}; bpe {bpe}; use_clr {use_clr};'
         f'use_regular_schedule {use_regular_schedule}; use_discriminative {use_discriminative}; last {last};'
         f'chain_thaw {chain_thaw}; from_scratch {from_scratch}; train_file_id {train_file_id}')
-    if not hasattr(torch._C, '_cuda_setDevice'):
-        print('CUDA not available. Setting device=-1.')
-        cuda_id = -1
-    torch.cuda.set_device(cuda_id)
-
+    set_cuda(cuda_id)
+    
     PRE = 'bwd_' if backwards else 'fwd_'
     PRE = 'bpe_' + PRE if bpe else PRE
     IDS = 'bpe' if bpe else 'ids'

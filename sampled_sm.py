@@ -1,23 +1,14 @@
-from fastai.learner import *
+from fastai.text.learner import *
 from fastai.text import *
 from torch_util import *
 
-def resample_vocab(itos, trn, val, sz):
-    freqs = Counter(trn)
-    itos2 = [o for o,p in freqs.most_common()][:sz]
-    itos2.insert(0,1)
-    itos2.insert(0,0)
-    stoi2 = collections.defaultdict(lambda:0, {v:k for k,v in enumerate(itos2)})
-
-    trn = np.array([stoi2[o] for o in trn])
-    val = np.array([stoi2[o] for o in val])
-
-    itos3 = [itos[o] for o in itos2]
-    stoi3 = collections.defaultdict(lambda:0, {v:k for k,v in enumerate(itos3)})
-    return trn,val,itos3,stoi3
-
 
 def get_prs(c, nt):
+    """
+    Returns the proportions (probabilities) for each word in <c>.
+    <c>: a numpy array of word ids
+    <nt>: size of the vocabulary == number of distinct words in <c>
+    """
     uni_counter = Counter(c)
     uni_counts = np.array([uni_counter[o] for o in range(nt)])
     return uni_counts/uni_counts.sum()
@@ -25,6 +16,17 @@ def get_prs(c, nt):
 class LinearDecoder(nn.Module):
     initrange=0.1
     def __init__(self, n_out, nhid, dropout, tie_encoder=None, decode_train=True):
+        """
+        <n_out>: size of the output layer (e.g. number of distinct classes)
+        <nhid>: size of the hidden layer, which is to be projected into
+            the output layer.
+        <droupout>: probability of drouput. At each time step and for
+            each node, it is the same.
+        <tie_encoder>: if True, ties the decoder weights to the encoder
+            (embedding) weights (?)
+        <decode_train>: whether the decoder layer should be trained
+            or not.
+        """
         super().__init__()
         self.decode_train = decode_train
         self.decoder = nn.Linear(nhid, n_out, bias=False)
@@ -43,14 +45,34 @@ class LinearDecoder(nn.Module):
 
 
 def get_language_model(n_tok, em_sz, nhid, nlayers, pad_token, decode_train=True, dropouts=None):
+    """
+    Constructs and returns a language model with the given parameters.
+    The model consists of a recurrent part (RNNEncoder), which takes as
+    input the current state and the next word and returns the next state;
+    and a linear decoder part that makes predictions based on the current
+    state.
+    
+    <n_tok>: number of different words (vocabulary size)
+    <em_sz>: embedding size (length of vectors corresponding to words)
+    <nhid>: size of the hidden representation layer
+    <n_layers>: number of layers of RNN
+    <pad_token>: 'the int value used for padding text'
+    
+    <dropouts[0]>: dropout to apply to the activations going from one LSTM layer to another
+    <dropouts[1]>: dropout used by linear decoder
+    <dropouts[2]>: dropout to apply to the input layer.
+    <dropouts[3]>: dropout to apply to the embedding layer.
+    <dropouts[4]>: dropout used for a LSTM's internal (or hidden) recurrent weights.
+    """
     if dropouts is None: dropouts = [0.5,0.4,0.5,0.05,0.3]
     rnn_enc = RNN_Encoder(n_tok, em_sz, n_hid=nhid, n_layers=nlayers, pad_token=pad_token,
-                 dropouti=dropouts[0], wdrop=dropouts[2], dropoute=dropouts[3], dropouth=dropouts[4])
+                dropouti=dropouts[0], wdrop=dropouts[2], dropoute=dropouts[3], dropouth=dropouts[4])
     rnn_dec = LinearDecoder(n_tok, em_sz, dropouts[1], decode_train=decode_train, tie_encoder=rnn_enc.encoder)
     return SequentialRNN(rnn_enc, rnn_dec)
 
 
 def pt_sample(pr, ns):
+    """"""
     w = -torch.log(make_cuda(FloatTensor(len(pr))).uniform_())/(pr+1e-10)
     return torch.topk(w, ns, largest=False)[1]
 

@@ -2,6 +2,8 @@ import fire
 from fastai.text import *
 from fastai.lm_rnn import *
 
+from torch_util import *
+
 
 class EarlyStopping(Callback):
     def __init__(self, learner, save_path, enc_path=None, patience=5):
@@ -40,12 +42,8 @@ def train_lm(dir_path, pretrain_path, cuda_id=0, cl=25, pretrain_id='wt103', lm_
           f'dropmult {dropmult}; lr {lr}; preload {preload}; bpe {bpe};'
           f'startat {startat}; use_clr {use_clr}; notrain {notrain}; joined {joined} '
           f'early stopping {early_stopping}')
-
-    if not hasattr(torch._C, '_cuda_setDevice'):
-        print('CUDA not available. Setting device=-1.')
-        cuda_id = -1
-    torch.cuda.set_device(cuda_id)
-
+    set_cuda(cuda_id)
+    
     PRE  = 'bwd_' if backwards else 'fwd_'
     PRE = 'bpe_' + PRE if bpe else PRE
     IDS = 'bpe' if bpe else 'ids'
